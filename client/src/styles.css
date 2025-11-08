@@ -1,0 +1,10 @@
+body { font-family: system-ui, sans-serif; padding: 20px; }
+.board { display: inline-block; border: 6px solid #0b63d6; background: #0b63d6; padding: 8px; border-radius: 8px; }
+.board-row { display:flex }
+.cell { width: 60px; height: 60px; margin: 4px; background: #1e90ff; border-radius: 8px; display:flex; align-items:center; justify-content:center; cursor:pointer }
+.disc { width: 50px; height: 50px; border-radius:50%; background: transparent; box-shadow: inset 0 -6px 8px rgba(0,0,0,0.2); }
+.disc.player-1 { background: red }
+.disc.player-2 { background: yellow }
+.disc.player-0 { background: #e6f2ff }
+
+.lobby input { padding:8px; margin-right:8px }
