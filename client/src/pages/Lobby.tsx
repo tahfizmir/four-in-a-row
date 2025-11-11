@@ -35,16 +35,29 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
 
   return (
     <div className="lobby">
-      <h1>Connect 4</h1>
-      <div>
-        <input placeholder="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <button onClick={joinQueue}>Join Queue</button>
-        <button onClick={leaveQueue}>Leave Queue</button>
+      <div className="notice">
+        The server may take up to 50 seconds to respond on your first request because it’s hosted on a free Render instance that “sleeps” when idle.
+        After the first response, everything will run fast and smoothly. Thanks for your patience!
       </div>
-      {waiting && <div>Waiting for opponent... (auto-bot in {waitSeconds}s)</div>}
-      <div style={{ marginTop: 20 }}>
-        <a href="/leaderboard.html">Leaderboard</a>
+
+      <header className="lobby-header">
+        <h1>Connect 4</h1>
+        <p className="subtitle">Real-time multiplayer — play online or vs a deterministic bot</p>
+      </header>
+
+      <div className="lobby-controls">
+        <input className="username" placeholder="Enter a username" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <div className="actions">
+          <button className="btn primary" onClick={joinQueue}>Join Queue</button>
+          <button className="btn" onClick={leaveQueue}>Leave Queue</button>
+        </div>
       </div>
+
+      {waiting && <div className="waiting">Waiting for opponent... (auto-bot in {waitSeconds}s)</div>}
+
+      <footer className="lobby-footer">
+        <a className="link" href="/leaderboard.html">View Leaderboard</a>
+      </footer>
     </div>
   );
 }
