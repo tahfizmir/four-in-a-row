@@ -14,7 +14,6 @@ async function connect() {
   // create client and connect
   client = new MongoClient(mongoUrl);
   try {
-    console.log('Attempting to connect to MongoDB at', mongoUrl);
     await client.connect();
     db = client.db(mongoDbName);
     console.log('Connected to MongoDB, using DB:', mongoDbName);

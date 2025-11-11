@@ -7,21 +7,41 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
   const [waitSeconds, setWaitSeconds] = useState<number | null>(null);
 
   useEffect(() => {
-    socket.on('matched', (data: any) => {
+    function handleMatched(data: any) {
       if (data.waiting) {
         setWaiting(true);
-        setWaitSeconds(data.waitSeconds);
+        setWaitSeconds(typeof data.waitSeconds === 'number' ? data.waitSeconds : null);
       } else {
         setWaiting(false);
-        // Request the full game state from server after we get matched. GameBoard will also request on mount.
-        // Pass minimal initial info to navigate immediately.
+        setWaitSeconds(null);
         onStart({ gameId: data.gameId, playerNum: data.playerNum, opponent: data.opponent, isBot: data.isBot, username });
-        // ask server to send the current game state to this socket
         socket.emit('request_game', { gameId: data.gameId });
       }
-    });
-    return () => { socket.off('matched'); };
-  }, []);
+    }
+
+    socket.on('matched', handleMatched);
+    return () => { socket.off('matched', handleMatched); };
+  }, [onStart, username]);
+
+  // Client-side countdown effect
+  useEffect(() => {
+    if (!waiting || waitSeconds === null) return;
+    // create interval that decrements waitSeconds every 1s
+    const id = setInterval(() => {
+      setWaitSeconds(prev => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          // reached zero — stop waiting and clear counter
+          setWaiting(false);
+          clearInterval(id);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [waiting, waitSeconds]);
 
   function joinQueue() {
     if (!username) return alert('Enter username');
@@ -31,6 +51,7 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
   function leaveQueue() {
     socket.emit('leave_queue');
     setWaiting(false);
+    setWaitSeconds(null);
   }
 
   return (
@@ -53,7 +74,7 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
         </div>
       </div>
 
-      {waiting && <div className="waiting">Waiting for opponent... (auto-bot in {waitSeconds}s)</div>}
+      {waiting && <div className="waiting">Waiting for opponent... (auto-bot in {waitSeconds ?? '—'}s)</div>}
 
       <footer className="lobby-footer">
         <a className="link" href="/leaderboard.html">View Leaderboard</a>
