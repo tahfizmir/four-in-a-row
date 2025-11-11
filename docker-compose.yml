@@ -1,17 +1,13 @@
 version: '3.8'
 services:
   db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: connect4
+    image: mongo:6
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - mongo-data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "mongosh --eval \"db.adminCommand('ping')\"" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +18,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/connect4
+      - MONGODB_URL=mongodb://db:27017
+      - MONGODB_DB=connect4
     ports:
       - "4000:4000"
 

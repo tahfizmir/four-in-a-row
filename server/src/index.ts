@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { newGame, dropPiece, isWinningMove, isBoardFull, cloneBoard, computeBestMove } from './game';
-import { pool, saveGameRecord, getLeaderboard } from './db';
+import { saveGameRecord, getLeaderboard } from './db';
 import { GameState } from './types';
 
 dotenv.config();
@@ -220,7 +220,15 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+  // allow client to request current game state for a gameId (useful after navigation)
+  socket.on('request_game', ({ gameId }: { gameId: string }) => {
+    const game = games.get(gameId);
+    if (!game) return socket.emit('error', { message: 'Game not found' });
+    // Send the game state to the requesting socket.
+    io.to(socket.id).emit('game_update', game);
+  });
+
+  socket.on('disconnect',async () => {
     console.log('socket disconnect', socket.id);
     // If player in waitingQueue, remove
     const wIdx = waitingQueue.findIndex((w) => w.socketId === socket.id);

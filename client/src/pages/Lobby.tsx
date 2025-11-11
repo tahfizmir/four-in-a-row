@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
-
-const socket = io('http://localhost:4000');
+import { socket } from '../socket';
 
 export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
   const [username, setUsername] = useState('');
@@ -15,7 +13,11 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
         setWaitSeconds(data.waitSeconds);
       } else {
         setWaiting(false);
+        // Request the full game state from server after we get matched. GameBoard will also request on mount.
+        // Pass minimal initial info to navigate immediately.
         onStart({ gameId: data.gameId, playerNum: data.playerNum, opponent: data.opponent, isBot: data.isBot });
+        // ask server to send the current game state to this socket
+        socket.emit('request_game', { gameId: data.gameId });
       }
     });
     return () => { socket.off('matched'); };
