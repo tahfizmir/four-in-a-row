@@ -3,7 +3,7 @@ import { socket } from '../socket';
 import Board from '../components/Board';
 import '../styles.css';
 
-// const socket = io('http://localhost:4000');
+
 
 export default function GameBoard({ initial, onExit }: { initial: any; onExit: () => void }) {
   const [game, setGame] = useState<any>(null);

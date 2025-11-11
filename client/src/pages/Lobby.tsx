@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { socket } from '../socket';
 
+type LeaderboardRow = { username: string; wins: number };
+
+const API_BASE = (import.meta as any).env?.VITE_SOCKET_URL || 'http://localhost:4000';
+
 export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
   const [username, setUsername] = useState('');
   const [waiting, setWaiting] = useState(false);
   const [waitSeconds, setWaitSeconds] = useState<number | null>(null);
+
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
+  const [lbLoading, setLbLoading] = useState(false);
+  const [lbError, setLbError] = useState<string | null>(null);
 
   useEffect(() => {
     function handleMatched(data: any) {
@@ -43,6 +51,30 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
     return () => clearInterval(id);
   }, [waiting, waitSeconds]);
 
+    async function fetchLeaderboard(limit = 10) {
+    setLbLoading(true);
+    setLbError(null);
+    try {
+      const url = API_BASE ? `${API_BASE}/leaderboard?limit=${limit}` : `/leaderboard?limit=${limit}`;
+      const res = await fetch(url, { credentials: 'include' });
+      const body = await res.json();
+      if (!res.ok || body.ok === false) {
+        throw new Error(body.error || `Status ${res.status}`);
+      }
+      setLeaderboard(body.rows || []);
+    } catch (err: any) {
+      console.error('Failed to fetch leaderboard', err);
+      setLbError(err.message || 'Failed to load leaderboard');
+      setLeaderboard([]);
+    } finally {
+      setLbLoading(false);
+    }
+  }
+
+   useEffect(() => {
+    fetchLeaderboard(10);
+  }, []);
+
   function joinQueue() {
     if (!username) return alert('Enter username');
     socket.emit('join_queue', { username });
@@ -77,7 +109,29 @@ export default function Lobby({ onStart }: { onStart: (data: any) => void }) {
       {waiting && <div className="waiting">Waiting for opponent... (auto-bot in {waitSeconds ?? '—'}s)</div>}
 
       <footer className="lobby-footer">
-        <a className="link" href="/leaderboard.html">View Leaderboard</a>
+           <section className="leaderboard">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>Leaderboard</h3>
+          <div>
+            <button className="btn" onClick={() => fetchLeaderboard(10)} disabled={lbLoading}>Refresh</button>
+          </div>
+        </div>
+
+        {lbLoading && <div>Loading leaderboard…</div>}
+        {lbError && <div className="error">Error: {lbError}</div>}
+
+        {!lbLoading && !lbError && leaderboard.length === 0 && <div className="muted">No winners yet — play a game!</div>}
+
+        {!lbLoading && leaderboard.length > 0 && (
+          <ol className="leaderboard-list">
+            {leaderboard.map((r, i) => (
+              <li key={r.username}>
+                <strong>{i + 1}. {r.username}</strong> — {r.wins} win{r.wins !== 1 ? 's' : ''}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
       </footer>
     </div>
   );
