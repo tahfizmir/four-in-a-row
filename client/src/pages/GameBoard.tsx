@@ -66,7 +66,7 @@ export default function GameBoard({ initial, onExit }: { initial: any; onExit: (
           <h3>Match</h3>
           <div>Game ID: <code>{initial?.gameId}</code></div>
           <div>Turn: {game ? `Player ${game.turn}` : '—'}</div>
-          <div>Opponent: {game ? Object.values(game.players).find((p: any) => p.playerNum !== playerNum)?.username ?? 'BOT' : '—'}</div>
+          <div>Opponent: {game ? (Object.values(game.players).find((p: any) => p.playerNum !== playerNum) as any)?.username ?? 'BOT' : '—'}</div>
           {opponentDisconnectedSecs !== null && (
             <div className="warning">Opponent disconnected — {opponentDisconnectedSecs}s</div>
           )}
